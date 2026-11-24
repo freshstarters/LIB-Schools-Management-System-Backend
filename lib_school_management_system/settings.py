@@ -153,6 +153,32 @@ GOJO_APP_ORIGIN = os.environ.get("GOJO_APP_ORIGIN", "").strip().rstrip("/")
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "").strip()
 GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET", "").strip()
 
+SMS_PROVIDER = os.environ.get("SMS_PROVIDER", "").strip()
+SMS_API_KEY = os.environ.get("SMS_API_KEY", "").strip()
+SMS_USERNAME = os.environ.get("SMS_USERNAME", "").strip()
+SMS_ACCOUNT_SID = os.environ.get("SMS_ACCOUNT_SID", "").strip()
+SMS_SENDER_ID = os.environ.get("SMS_SENDER_ID", "").strip()
+
+WHATSAPP_PHONE_NUMBER_ID = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "").strip()
+WHATSAPP_ACCESS_TOKEN = os.environ.get("WHATSAPP_ACCESS_TOKEN", "").strip()
+WHATSAPP_VERIFY_TOKEN = os.environ.get("WHATSAPP_VERIFY_TOKEN", "").strip()
+
+AI_PROVIDER = os.environ.get("AI_PROVIDER", "").strip()
+AI_API_KEY = os.environ.get("AI_API_KEY", "").strip()
+AI_MODEL = os.environ.get("AI_MODEL", "").strip()
+
+MTN_MOMO_ENV = os.environ.get("MTN_MOMO_ENV", "").strip()
+MTN_MOMO_SUBSCRIPTION_KEY = os.environ.get("MTN_MOMO_SUBSCRIPTION_KEY", "").strip()
+MTN_MOMO_API_USER = os.environ.get("MTN_MOMO_API_USER", "").strip()
+MTN_MOMO_API_KEY = os.environ.get("MTN_MOMO_API_KEY", "").strip()
+MTN_MOMO_WEBHOOK_SECRET = os.environ.get("MTN_MOMO_WEBHOOK_SECRET", "").strip()
+
+ORANGE_MONEY_ENV = os.environ.get("ORANGE_MONEY_ENV", "").strip()
+ORANGE_MONEY_CLIENT_ID = os.environ.get("ORANGE_MONEY_CLIENT_ID", "").strip()
+ORANGE_MONEY_CLIENT_SECRET = os.environ.get("ORANGE_MONEY_CLIENT_SECRET", "").strip()
+ORANGE_MONEY_MERCHANT_KEY = os.environ.get("ORANGE_MONEY_MERCHANT_KEY", "").strip()
+ORANGE_MONEY_WEBHOOK_SECRET = os.environ.get("ORANGE_MONEY_WEBHOOK_SECRET", "").strip()
+
 if REDIS_URL:
     CACHES = {
         "default": {

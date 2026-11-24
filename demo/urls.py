@@ -1,6 +1,15 @@
 from django.urls import path
 
 from core.service.auth import DOOR_DEMO
+from demo.views.settings import (
+    AcademicYearDetailView,
+    AcademicYearListView,
+    CampusDetailView,
+    CampusListView,
+    GradeLevelListView,
+    IntegrationStatusView,
+    SettingsView,
+)
 from core.views.auth import (
     ConfigView,
     GoogleView,
@@ -20,6 +29,17 @@ from core.views.onboarding import (
 )
 
 urlpatterns = [
+    path("settings/", SettingsView.as_view(), name="demo-settings"),
+    path("campuses/", CampusListView.as_view(), name="demo-campuses"),
+    path("campuses/<uuid:campus_id>/", CampusDetailView.as_view(), name="demo-campus-detail"),
+    path("academic-years/", AcademicYearListView.as_view(), name="demo-academic-years"),
+    path(
+        "academic-years/<uuid:year_id>/",
+        AcademicYearDetailView.as_view(),
+        name="demo-academic-year-detail",
+    ),
+    path("grade-levels/", GradeLevelListView.as_view(), name="demo-grade-levels"),
+    path("integrations/status/", IntegrationStatusView.as_view(), name="demo-integration-status"),
     path("auth/config/", ConfigView.as_view(), name="demo-auth-config"),
     path("auth/sessions/", SessionsView.as_view(door=DOOR_DEMO), name="demo-auth-sessions"),
     path(
