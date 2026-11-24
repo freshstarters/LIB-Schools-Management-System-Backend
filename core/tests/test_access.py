@@ -547,7 +547,7 @@ class AccessTests(TestCase):
                     os.environ.pop("SEED_GOJO_PASSWORD", None)
                 else:
                     os.environ["SEED_GOJO_PASSWORD"] = old
-        self.assertEqual(User.objects.filter(app_scope=User.AppScope.DEMO).count(), 4)
+        self.assertEqual(User.objects.filter(app_scope=User.AppScope.DEMO).count(), 4756)
         user = User.objects.get(email="samuel.kollie@gojo.test")
         self.assertEqual(user.display_name, "Dr. Samuel Kollie")
         self.assertTrue(user.check_password(NEW_PASSWORD))
