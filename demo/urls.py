@@ -1,6 +1,18 @@
 from django.urls import path
 
 from core.service.auth import DOOR_DEMO
+from demo.views.classes import (
+    AbsenceView,
+    ClassroomDetailView,
+    ClassroomListView,
+    ClassroomSubjectsView,
+    SubjectListView,
+    SubstitutionListView,
+    TeacherOptionListView,
+    TimetableDetailView,
+    TimetableListView,
+    UncoveredTimetableView,
+)
 from demo.views.settings import (
     AcademicYearDetailView,
     AcademicYearListView,
@@ -40,6 +52,24 @@ urlpatterns = [
     ),
     path("grade-levels/", GradeLevelListView.as_view(), name="demo-grade-levels"),
     path("integrations/status/", IntegrationStatusView.as_view(), name="demo-integration-status"),
+    path("subjects/", SubjectListView.as_view(), name="demo-subjects"),
+    path("classes/", ClassroomListView.as_view(), name="demo-classes"),
+    path("classes/teachers/", TeacherOptionListView.as_view(), name="demo-class-teachers"),
+    path("classes/<uuid:classroom_id>/", ClassroomDetailView.as_view(), name="demo-class-detail"),
+    path(
+        "classes/<uuid:classroom_id>/subjects/",
+        ClassroomSubjectsView.as_view(),
+        name="demo-class-subjects",
+    ),
+    path("timetable/", TimetableListView.as_view(), name="demo-timetable"),
+    path("timetable/uncovered/", UncoveredTimetableView.as_view(), name="demo-timetable-uncovered"),
+    path("timetable/absences/", AbsenceView.as_view(), name="demo-timetable-absences"),
+    path(
+        "timetable/substitutions/",
+        SubstitutionListView.as_view(),
+        name="demo-timetable-substitutions",
+    ),
+    path("timetable/<uuid:slot_id>/", TimetableDetailView.as_view(), name="demo-timetable-detail"),
     path("auth/config/", ConfigView.as_view(), name="demo-auth-config"),
     path("auth/sessions/", SessionsView.as_view(door=DOOR_DEMO), name="demo-auth-sessions"),
     path(
