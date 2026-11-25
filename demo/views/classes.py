@@ -140,14 +140,17 @@ class UncoveredTimetableView(_AcademicsView):
 
     def get(self, request):
         on_date = _query_date(request.query_params.get("date"))
-        rows, count = timetable.uncovered_slots(on_date)
+        rows, count = timetable.uncovered_slots(request.memberships, on_date)
         return Response({"date": on_date.isoformat(), "count": count, "results": rows})
 
 
 class AbsenceView(_AcademicsView):
     def post(self, request):
         def produce():
-            return Response(timetable.upsert_absence(request.data), status=201)
+            return Response(
+                timetable.upsert_absence(request.data, request.memberships),
+                status=201,
+            )
 
         return run_idempotent(self, request, produce)
 
@@ -155,6 +158,7 @@ class AbsenceView(_AcademicsView):
         def produce():
             return Response(
                 timetable.delete_absence(
+                    memberships=request.memberships,
                     absence_id=request.query_params.get("id"),
                     teacher_id=request.query_params.get("teacher"),
                     on_date=request.query_params.get("date"),
@@ -169,11 +173,20 @@ class SubstitutionListView(_AcademicsView):
         on_date = request.query_params.get("date")
         parsed = _query_date(on_date) if on_date else None
         slot_id = request.query_params.get("slot") or None
-        return Response(timetable.list_substitutions(on_date=parsed, slot_id=slot_id))
+        return Response(
+            timetable.list_substitutions(
+                request.memberships,
+                on_date=parsed,
+                slot_id=slot_id,
+            )
+        )
 
     def post(self, request):
         def produce():
-            return Response(timetable.create_substitution(request.data), status=201)
+            return Response(
+                timetable.create_substitution(request.data, request.memberships),
+                status=201,
+            )
 
         return run_idempotent(self, request, produce)
 

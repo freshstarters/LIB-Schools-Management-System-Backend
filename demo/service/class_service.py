@@ -84,7 +84,21 @@ def ensure_classrooms():
             )
             if was_created:
                 created += 1
+    _repair_spaced_room_labels()
     return created
+
+
+def _repair_spaced_room_labels():
+    """Fix NurseryA-style labels left by an earlier seed helper."""
+    rows = Classroom.objects.select_related("grade_level").exclude(
+        grade_level__name__startswith="Grade "
+    )
+    for classroom in rows:
+        glued = f"{classroom.grade_level.name}{classroom.section_name}"
+        spaced = f"{classroom.grade_level.name} {classroom.section_name}"
+        if classroom.room_label == glued:
+            classroom.room_label = spaced
+            classroom.save(update_fields=["room_label", "updated_at"])
 
 
 def list_subjects():

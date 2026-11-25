@@ -53,7 +53,7 @@ BURSAR_FIELDS = frozenset(
 )
 
 DIVISIONS = (
-    ("ece", "ECE", 1),
+    ("ece", "Early Childhood", 1),
     ("elementary", "Elementary", 2),
     ("junior-high", "Junior High", 3),
     ("senior-high", "Senior High", 4),
@@ -123,10 +123,13 @@ def ensure_school_profile():
     with transaction.atomic():
         divisions = {}
         for code, name, order in DIVISIONS:
-            division, _created = Division.objects.get_or_create(
+            division, created = Division.objects.get_or_create(
                 code=code,
                 defaults={"name": name, "sort_order": order},
             )
+            if not created and division.name == "ECE" and name == "Early Childhood":
+                division.name = name
+                division.save(update_fields=["name"])
             divisions[code] = division
         grades = {}
         for name, division_code, order in GRADE_LEVELS:

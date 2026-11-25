@@ -5,6 +5,7 @@ from django.test import TestCase, override_settings
 from core.models import RoleMembership, User
 from core.tests.support import bearer_for
 from demo.models import AcademicYear, Campus, MarkingPeriod, SchoolConfig
+from demo.service.school_service import ensure_school_profile
 
 SETTINGS = "/api/demo/v1/settings/"
 CAMPUSES = "/api/demo/v1/campuses/"
@@ -46,6 +47,7 @@ def _person(email, role):
 )
 class SchoolSettingsTests(TestCase):
     def setUp(self):
+        ensure_school_profile()
         self.principal = _person("samuel.kollie@gojo.test", "principal")
         self.bursar = _person("joseph.freeman@gojo.test", "bursar")
         self.registrar = _person("beatrice.toe@gojo.test", "registrar")

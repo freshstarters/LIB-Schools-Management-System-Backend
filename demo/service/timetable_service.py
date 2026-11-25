@@ -309,7 +309,7 @@ def delete_slot(slot):
     slot.delete()
 
 
-def uncovered_slots(on_date=None):
+def uncovered_slots(memberships, on_date=None):
     on_date = on_date or monrovia_today()
     day = WEEKDAY_TO_DAY.get(on_date.weekday())
     if day is None:
@@ -321,11 +321,15 @@ def uncovered_slots(on_date=None):
         TeacherAbsence.objects.filter(date=on_date).values_list("teacher_id", flat=True)
     )
     rows = []
-    slots = TimetableSlot.objects.filter(day_of_week=day).select_related(
-        "classroom__campus",
-        "classroom__grade_level",
-        "subject__division",
-        "teacher",
+    allowed = classrooms_for_actor(memberships)
+    slots = (
+        TimetableSlot.objects.filter(day_of_week=day, classroom__in=allowed)
+        .select_related(
+            "classroom__campus",
+            "classroom__grade_level",
+            "subject__division",
+            "teacher",
+        )
     )
     for slot in slots:
         if slot.pk in covered:
@@ -337,7 +341,7 @@ def uncovered_slots(on_date=None):
     return rows, len(rows)
 
 
-def upsert_absence(payload):
+def upsert_absence(payload, memberships):
     teacher = _required_teacher(payload.get("teacher_id"))
     on_date = _date_value(payload.get("date"), "date")
     reason = _text(payload.get("reason"), "reason")
@@ -346,7 +350,7 @@ def upsert_absence(payload):
         date=on_date,
         defaults={"reason": reason},
     )
-    rows, count = uncovered_slots(on_date)
+    rows, count = uncovered_slots(memberships, on_date)
     return {
         "absence": absence_payload(row),
         "uncovered": rows,
@@ -354,23 +358,23 @@ def upsert_absence(payload):
     }
 
 
-def delete_absence(*, absence_id=None, teacher_id=None, on_date=None):
+def delete_absence(*, memberships, absence_id=None, teacher_id=None, on_date=None):
     if absence_id:
         row = TeacherAbsence.objects.filter(pk=absence_id).first()
         if row is None:
             _invalid("id", "Absence was not found.")
         day = row.date
         row.delete()
-        rows, count = uncovered_slots(day)
+        rows, count = uncovered_slots(memberships, day)
         return {"uncovered": rows, "count": count}
     teacher = _required_teacher(teacher_id)
     day = _date_value(on_date, "date")
     TeacherAbsence.objects.filter(teacher=teacher, date=day).delete()
-    rows, count = uncovered_slots(day)
+    rows, count = uncovered_slots(memberships, day)
     return {"uncovered": rows, "count": count}
 
 
-def create_substitution(payload):
+def create_substitution(payload, memberships):
     slot = _slot(payload.get("slot_id"))
     on_date = _date_value(payload.get("date"), "date")
     day = WEEKDAY_TO_DAY.get(on_date.weekday())
@@ -393,7 +397,7 @@ def create_substitution(payload):
                 "reason": reason,
             },
         )
-    rows, count = uncovered_slots(on_date)
+    rows, count = uncovered_slots(memberships, on_date)
     return {
         "substitution": substitution_payload(row),
         "uncovered": rows,
@@ -401,8 +405,9 @@ def create_substitution(payload):
     }
 
 
-def list_substitutions(*, on_date=None, slot_id=None):
-    query = TeacherSubstitution.objects.select_related(
+def list_substitutions(memberships, *, on_date=None, slot_id=None):
+    allowed = classrooms_for_actor(memberships)
+    query = TeacherSubstitution.objects.filter(slot__classroom__in=allowed).select_related(
         "substitute_teacher",
         "slot__classroom__campus",
         "slot__classroom__grade_level",
