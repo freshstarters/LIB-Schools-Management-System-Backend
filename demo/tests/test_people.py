@@ -282,6 +282,18 @@ class PeopleDirectoryTests(TestCase):
         )
         self.assertEqual(blocked.status_code, 400)
 
+    def test_staff_backfill_clears_shared_phone(self):
+        from django.core.management import call_command
+
+        call_command("backfill_demo_staff")
+        profile = StaffProfile.objects.get(user=self.principal)
+        self.assertEqual(profile.phone, "")
+        profile.phone = "+231770000000"
+        profile.save(update_fields=["phone"])
+        call_command("backfill_demo_staff")
+        profile.refresh_from_db()
+        self.assertEqual(profile.phone, "")
+
     def test_guardian_phone_normalizes(self):
         row = self._create_guardian(phone="0886550102", whatsapp_phone="0775550102")
         self.assertEqual(row["phone"], "+231886550102")

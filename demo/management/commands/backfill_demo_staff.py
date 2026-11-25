@@ -24,6 +24,7 @@ ROLE_PRIORITY = (
     RoleMembership.Role.TEACHER,
     RoleMembership.Role.SUPPORT_STAFF,
 )
+SHARED_PHONE = "+231770000000"
 JOB_TITLES = {
     RoleMembership.Role.PRINCIPAL: "Principal",
     RoleMembership.Role.REGISTRAR: "Registrar",
@@ -49,17 +50,24 @@ class Command(BaseCommand):
         )
         created = 0
         skipped = 0
+        repaired = 0
         for user in users:
-            if StaffProfile.objects.filter(user=user).exists():
-                skipped += 1
-                continue
             role = _staff_role(user)
             if role is None:
                 skipped += 1
                 continue
+            phone = _staff_phone(user)
+            existing = StaffProfile.objects.filter(user=user).first()
+            if existing is not None:
+                if existing.phone == SHARED_PHONE and existing.phone != phone:
+                    existing.phone = phone
+                    existing.save(update_fields=["phone", "updated_at"])
+                    repaired += 1
+                else:
+                    skipped += 1
+                continue
             campus_id = _campus_id(user, role)
             division = _division_for(user)
-            phone = user.phone or "+231770000000"
             with transaction.atomic():
                 StaffProfile.objects.create(
                     user=user,
@@ -79,8 +87,17 @@ class Command(BaseCommand):
                 )
             created += 1
         self.stdout.write(
-            self.style.SUCCESS(f"staff_created={created} staff_skipped={skipped}")
+            self.style.SUCCESS(
+                f"staff_created={created} staff_skipped={skipped} staff_repaired={repaired}"
+            )
         )
+
+
+def _staff_phone(user):
+    phone = (user.phone or "").strip()
+    if phone == SHARED_PHONE:
+        return ""
+    return phone
 
 
 def _staff_role(user):

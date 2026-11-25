@@ -178,7 +178,7 @@ class StaffProfile(models.Model):
         related_name="staff",
     )
     qualifications = models.TextField(blank=True)
-    phone = models.CharField(max_length=20)
+    phone = models.CharField(max_length=20, blank=True)
     email = models.EmailField()
     employment_status = models.CharField(
         max_length=16,
