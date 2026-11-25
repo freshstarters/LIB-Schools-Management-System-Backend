@@ -18,12 +18,37 @@ from demo.views.settings import (
     AcademicYearListView,
     CampusDetailView,
     CampusListView,
+    DemoConfigView,
     GradeLevelListView,
     IntegrationStatusView,
     SettingsView,
 )
+from demo.views.parents import (
+    ParentChildDetailView,
+    ParentChildrenView,
+    ParentDeactivateView,
+    ParentDetailView,
+    ParentInviteView,
+    ParentListView,
+    ParentReactivateView,
+)
+from demo.views.students import (
+    StudentConductView,
+    StudentDetailView,
+    StudentListView,
+    StudentPickupDetailView,
+    StudentPickupListView,
+    StudentWelfareView,
+    StudentWithdrawView,
+)
+from demo.views.teachers import (
+    TeacherDeactivateView,
+    TeacherDetailView,
+    TeacherInviteView,
+    TeacherListView,
+    TeacherReactivateView,
+)
 from core.views.auth import (
-    ConfigView,
     GoogleView,
     LoginView,
     LogoutView,
@@ -70,7 +95,78 @@ urlpatterns = [
         name="demo-timetable-substitutions",
     ),
     path("timetable/<uuid:slot_id>/", TimetableDetailView.as_view(), name="demo-timetable-detail"),
-    path("auth/config/", ConfigView.as_view(), name="demo-auth-config"),
+    path("students/", StudentListView.as_view(), name="demo-students"),
+    path("students/<uuid:student_id>/", StudentDetailView.as_view(), name="demo-student-detail"),
+    path(
+        "students/<uuid:student_id>/withdraw/",
+        StudentWithdrawView.as_view(),
+        name="demo-student-withdraw",
+    ),
+    path(
+        "students/<uuid:student_id>/welfare/",
+        StudentWelfareView.as_view(),
+        name="demo-student-welfare",
+    ),
+    path(
+        "students/<uuid:student_id>/pickups/",
+        StudentPickupListView.as_view(),
+        name="demo-student-pickups",
+    ),
+    path(
+        "students/<uuid:student_id>/pickups/<uuid:pickup_id>/",
+        StudentPickupDetailView.as_view(),
+        name="demo-student-pickup-detail",
+    ),
+    path(
+        "students/<uuid:student_id>/conduct/",
+        StudentConductView.as_view(),
+        name="demo-student-conduct",
+    ),
+    path("teachers/", TeacherListView.as_view(), name="demo-teachers"),
+    path("teachers/<uuid:staff_id>/", TeacherDetailView.as_view(), name="demo-teacher-detail"),
+    path(
+        "teachers/<uuid:staff_id>/send-invite/",
+        TeacherInviteView.as_view(),
+        name="demo-teacher-invite",
+    ),
+    path(
+        "teachers/<uuid:staff_id>/deactivate/",
+        TeacherDeactivateView.as_view(),
+        name="demo-teacher-deactivate",
+    ),
+    path(
+        "teachers/<uuid:staff_id>/reactivate/",
+        TeacherReactivateView.as_view(),
+        name="demo-teacher-reactivate",
+    ),
+    path("parents/", ParentListView.as_view(), name="demo-parents"),
+    path("parents/<uuid:parent_id>/", ParentDetailView.as_view(), name="demo-parent-detail"),
+    path(
+        "parents/<uuid:parent_id>/send-invite/",
+        ParentInviteView.as_view(),
+        name="demo-parent-invite",
+    ),
+    path(
+        "parents/<uuid:parent_id>/deactivate/",
+        ParentDeactivateView.as_view(),
+        name="demo-parent-deactivate",
+    ),
+    path(
+        "parents/<uuid:parent_id>/reactivate/",
+        ParentReactivateView.as_view(),
+        name="demo-parent-reactivate",
+    ),
+    path(
+        "parents/<uuid:parent_id>/children/",
+        ParentChildrenView.as_view(),
+        name="demo-parent-children",
+    ),
+    path(
+        "parents/<uuid:parent_id>/children/<uuid:link_id>/",
+        ParentChildDetailView.as_view(),
+        name="demo-parent-child-detail",
+    ),
+    path("auth/config/", DemoConfigView.as_view(), name="demo-auth-config"),
     path("auth/sessions/", SessionsView.as_view(door=DOOR_DEMO), name="demo-auth-sessions"),
     path(
         "auth/sessions/<uuid:session_id>/",

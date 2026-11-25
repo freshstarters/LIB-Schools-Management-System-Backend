@@ -1,12 +1,13 @@
 """School settings, campuses, the calendar, and integration health."""
 
 from django.conf import settings
+from django.middleware.csrf import get_token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.helpers.idempotency import enforce_unmatched_since, run_idempotent
 from core.helpers.permissions import BURSAR, PRINCIPAL, REGISTRAR, HasSchoolRole
-from core.service.auth import user_from_bearer
+from core.service.auth import public_config, user_from_bearer
 from demo.models import AcademicYear, Campus, GradeLevel, SchoolConfig
 from demo.service.school_service import (
     campus_counts,
@@ -45,6 +46,20 @@ def _config():
         "academic_year",
         "active_marking_period",
     ).get(singleton=True)
+
+
+class DemoConfigView(APIView):
+    """Public auth config plus the Gojo school name for the shell and sign-in card."""
+
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        django_request = getattr(request, "_request", request)
+        body = public_config(get_token(django_request))
+        ensure_school_profile()
+        body["school_name"] = SchoolConfig.objects.get(singleton=True).school_name
+        return Response(body)
 
 
 class SettingsView(_SchoolView):

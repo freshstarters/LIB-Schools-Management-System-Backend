@@ -85,6 +85,7 @@ def start_session(user):
             "app_scope": user.app_scope,
             "tenant_slug": tenant_slug_for(user),
             "role": highest_role(user),
+            "jti": secrets.token_urlsafe(16),
             "iat": now,
             "exp": now + timedelta(minutes=ACCESS_MINUTES),
         }
