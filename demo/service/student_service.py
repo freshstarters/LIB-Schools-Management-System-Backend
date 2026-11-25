@@ -3,7 +3,7 @@
 from datetime import date
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -16,7 +16,9 @@ from demo.models import (
     Campus,
     Classroom,
     ConductNote,
+    GuardianProfile,
     Student,
+    StudentGuardianLink,
     StudentWelfare,
 )
 from demo.service.timetable_service import classrooms_for_actor, monrovia_today
@@ -83,6 +85,14 @@ def students_for_actor(memberships):
         "last_homeroom_teacher",
         "welfare",
         "user",
+    ).prefetch_related(
+        Prefetch(
+            "guardian_links",
+            queryset=StudentGuardianLink.objects.filter(is_primary=True).select_related(
+                "guardian"
+            ),
+            to_attr="primary_links",
+        )
     )
     if roles.intersection(
         {
@@ -216,6 +226,8 @@ def enroll_student(payload, *, photo=None):
             student.photo = photo
             student.save(update_fields=["photo", "updated_at"])
         StudentWelfare.objects.create(student=student)
+        if "primary_guardian_id" in payload:
+            assign_primary_guardian(student, payload.get("primary_guardian_id"))
     return student_payload(student)
 
 
@@ -262,7 +274,67 @@ def update_student(student, payload, *, photo=None, memberships=None):
     if photo is not None:
         student.photo = photo
     student.save()
+    if "primary_guardian_id" in payload:
+        assign_primary_guardian(student, payload.get("primary_guardian_id"))
     return student_payload(student)
+
+
+def assign_primary_guardian(student, raw):
+    if raw in (None, ""):
+        StudentGuardianLink.objects.filter(student=student, is_primary=True).update(
+            is_primary=False
+        )
+        if hasattr(student, "primary_links"):
+            delattr(student, "primary_links")
+        return
+    guardian = GuardianProfile.objects.filter(pk=raw).first()
+    if guardian is None:
+        _invalid("primary_guardian_id", "Guardian was not found.")
+    if guardian.status == GuardianProfile.Status.INACTIVE:
+        _invalid("primary_guardian_id", "Cannot set an inactive guardian as primary.")
+    with transaction.atomic():
+        StudentGuardianLink.objects.filter(student=student, is_primary=True).exclude(
+            guardian=guardian
+        ).update(is_primary=False)
+        link = StudentGuardianLink.objects.filter(
+            student=student,
+            guardian=guardian,
+        ).first()
+        if link is None:
+            StudentGuardianLink.objects.create(
+                student=student,
+                guardian=guardian,
+                relationship=StudentGuardianLink.Relationship.GUARDIAN,
+                is_primary=True,
+            )
+        elif not link.is_primary:
+            link.is_primary = True
+            link.save(update_fields=["is_primary", "updated_at"])
+    if hasattr(student, "primary_links"):
+        delattr(student, "primary_links")
+
+
+def _primary_link(student):
+    cached = getattr(student, "primary_links", None)
+    if cached is not None:
+        return cached[0] if cached else None
+    return (
+        student.guardian_links.filter(is_primary=True)
+        .select_related("guardian")
+        .first()
+    )
+
+
+def _primary_guardian_payload(student):
+    link = _primary_link(student)
+    if link is None:
+        return None
+    guardian = link.guardian
+    return {
+        "id": str(guardian.pk),
+        "full_name": guardian.full_name,
+        "phone": guardian.phone,
+    }
 
 
 def withdraw_student(student):
@@ -378,7 +450,7 @@ def student_payload(student):
         "gender_label": GENDER_LABEL.get(student.gender, student.gender),
         "catchment_zone": student.catchment_zone,
         "photo_url": photo_url(student.photo),
-        "primary_guardian": None,
+        "primary_guardian": _primary_guardian_payload(student),
         "attendance_pct": None,
         "yearly_avg_pct": None,
         "exam_clearance": None,

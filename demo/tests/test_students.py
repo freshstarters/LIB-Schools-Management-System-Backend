@@ -5,7 +5,7 @@ from datetime import date
 from django.test import TestCase, override_settings
 
 from core.models import RoleMembership, User
-from demo.models import Campus, Classroom, ConductNote, Student
+from demo.models import Campus, Classroom, ConductNote, GuardianProfile, Student, StudentGuardianLink
 from demo.service.class_service import ensure_classrooms, ensure_subjects
 from demo.service.school_service import ensure_school_profile
 
@@ -88,6 +88,50 @@ class StudentDirectoryTests(TestCase):
         )
         self.assertEqual(response.status_code, 201, response.content)
         return response.json()
+
+    def test_primary_guardian_round_trip(self):
+        helena = GuardianProfile.objects.create(
+            full_name="Helena Flomo",
+            phone="+231886550101",
+            email="helena.flomo@gojo.test",
+        )
+        martha = GuardianProfile.objects.create(
+            full_name="Martha Wreh",
+            phone="+231886550102",
+            email="martha.wreh@gojo.test",
+        )
+        created = self._enroll("Prince Toe", primary_guardian_id=str(helena.pk))
+        self.assertEqual(created["primary_guardian"]["full_name"], "Helena Flomo")
+        self.assertEqual(created["primary_guardian"]["phone"], "+231886550101")
+        listed = self.client.get(STUDENTS, **_auth(self.registrar, "registrar"))
+        match = next(row for row in listed.json()["results"] if row["id"] == created["id"])
+        self.assertEqual(match["primary_guardian"]["id"], str(helena.pk))
+
+        switched = self.client.patch(
+            f"{STUDENTS}{created['id']}/",
+            data={"primary_guardian_id": str(martha.pk)},
+            content_type="application/json",
+            **_auth(self.principal, "principal"),
+        )
+        self.assertEqual(switched.status_code, 200, switched.content)
+        self.assertEqual(switched.json()["primary_guardian"]["full_name"], "Martha Wreh")
+        self.assertEqual(
+            StudentGuardianLink.objects.filter(student_id=created["id"], is_primary=True).count(),
+            1,
+        )
+
+        cleared = self.client.patch(
+            f"{STUDENTS}{created['id']}/",
+            data={"primary_guardian_id": ""},
+            content_type="application/json",
+            **_auth(self.registrar, "registrar"),
+        )
+        self.assertEqual(cleared.status_code, 200, cleared.content)
+        self.assertIsNone(cleared.json()["primary_guardian"])
+        self.assertEqual(
+            StudentGuardianLink.objects.filter(student_id=created["id"]).count(),
+            2,
+        )
 
     def test_enroll_generates_unique_gi_code(self):
         first = self._enroll("Prince Toe")
