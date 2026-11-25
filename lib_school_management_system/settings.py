@@ -179,6 +179,41 @@ ORANGE_MONEY_CLIENT_SECRET = os.environ.get("ORANGE_MONEY_CLIENT_SECRET", "").st
 ORANGE_MONEY_MERCHANT_KEY = os.environ.get("ORANGE_MONEY_MERCHANT_KEY", "").strip()
 ORANGE_MONEY_WEBHOOK_SECRET = os.environ.get("ORANGE_MONEY_WEBHOOK_SECRET", "").strip()
 
+STORAGE_BACKEND = os.environ.get("STORAGE_BACKEND", "").strip().lower()
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "").strip()
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "").strip()
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "").strip()
+AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL", "").strip()
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+from core.integrations.storage import assert_storage_configured  # noqa: E402
+
+_storage_backend = assert_storage_configured()
+if _storage_backend == "local":
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": str(MEDIA_ROOT),
+                "base_url": MEDIA_URL,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "core.integrations.storage.PrivateS3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+
 if REDIS_URL:
     CACHES = {
         "default": {
