@@ -18,7 +18,7 @@ Unset `TENANCY_DB_MODE` means `shared`. Unset `TENANCY_ROUTING_MODE` means `head
 python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-The admin URL's role needs `CREATEDB` and `CREATEROLE`. Local `DATABASE_URL` and `TENANCY_PG_ADMIN_URL` both use the PostgreSQL 16 server on `127.0.0.1:5433`, because the host login `demiz` can create databases and cannot create roles, and it cannot create tables in the existing `lib_sms` database. Per-tenant provisioning creates `sms_tenant_<slug>` owned by a login role `sms_<slug>` that cannot create databases. Only the password is encrypted. The role name, host, port, and database name are stored in plaintext on `TenantSchool`. `python manage.py migrate_all_tenants` migrates active tenant databases and records each result. It raises `CommandError` in shared mode. One tenant's failure does not stop the others.
+The admin URL's role needs `CREATEDB` and `CREATEROLE`. Local `DATABASE_URL` and `TENANCY_PG_ADMIN_URL` both use the PostgreSQL 16 server on `127.0.0.1:5433` with the host login `demiz`. Per-tenant provisioning creates `sms_tenant_<slug>` owned by a login role `sms_<slug>` that cannot create databases. Only the password is encrypted. The role name, host, port, and database name are stored in plaintext on `TenantSchool`. `python manage.py migrate_all_tenants` migrates active tenant databases and records each result. It raises `CommandError` in shared mode. One tenant's failure does not stop the others.
 
 These checks live in `core/helpers/environment.py` and `core/tenancy/config.py`.
 
