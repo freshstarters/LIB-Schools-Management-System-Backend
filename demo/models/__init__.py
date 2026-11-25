@@ -6,6 +6,15 @@ from demo.models.academics import (
     TeacherSubstitution,
     TimetableSlot,
 )
+from demo.models.people import (
+    AuthorizedPickup,
+    ConductNote,
+    GuardianProfile,
+    StaffProfile,
+    Student,
+    StudentGuardianLink,
+    StudentWelfare,
+)
 from demo.models.school import (
     AcademicYear,
     Campus,
@@ -17,13 +26,20 @@ from demo.models.school import (
 
 __all__ = [
     "AcademicYear",
+    "AuthorizedPickup",
     "Campus",
     "ClassSubjectAssignment",
     "Classroom",
+    "ConductNote",
     "Division",
     "GradeLevel",
+    "GuardianProfile",
     "MarkingPeriod",
     "SchoolConfig",
+    "StaffProfile",
+    "Student",
+    "StudentGuardianLink",
+    "StudentWelfare",
     "Subject",
     "TeacherAbsence",
     "TeacherSubstitution",
